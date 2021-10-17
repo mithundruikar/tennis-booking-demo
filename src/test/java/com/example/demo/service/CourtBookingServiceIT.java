@@ -70,7 +70,7 @@ public class CourtBookingServiceIT {
         assertTrue(getPostResponse(request3, "/api/tennis/reservations", ReservationResponse.class).isSuccess());
         assertTrue(getPostResponse(request4, "/api/tennis/reservations", ReservationResponse.class).isSuccess());
 
-        CourtBooking poll = confirmedBookings.poll(10, TimeUnit.SECONDS);
+        CourtBooking poll = confirmedBookings.poll(1000, TimeUnit.SECONDS);
         assertEquals(Status.CONFIRMED, poll.getStatus());
         assertEquals(new Court(1l), poll.getCourt());
         assertEquals(bookingDate, poll.getBookingDate());

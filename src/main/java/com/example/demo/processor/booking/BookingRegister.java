@@ -7,8 +7,10 @@ import com.example.demo.processor.publisher.BookingPublisher;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
@@ -22,8 +24,10 @@ public class BookingRegister {
     private final int playersPerCourt;
     private final int availableCourts;
     private TransactionTemplate transactionTemplate;
+    private EntityManager entityManager;
 
-    public BookingRegister(CourtBookingRepository courtBookingRepository, BookingPublisher bookingPublisher, CourtRepository courtRepository, int availableCourts, int playersPerCourt, TransactionTemplate transactionTemplate) {
+    public BookingRegister(CourtBookingRepository courtBookingRepository, BookingPublisher bookingPublisher, CourtRepository courtRepository, int availableCourts, int playersPerCourt, TransactionTemplate transactionTemplate,
+                           EntityManager entityManager) {
         assert availableCourts > 0;
         assert playersPerCourt > 0;
 
@@ -35,6 +39,7 @@ public class BookingRegister {
         this.availableCourts = availableCourts;
         this.playersPerCourt = playersPerCourt;
         this.transactionTemplate = transactionTemplate;
+        this.entityManager = entityManager;
     }
 
     @PostConstruct
@@ -78,15 +83,29 @@ public class BookingRegister {
         Court court = new Court(Long.valueOf(dayBookings.getCurrentCourtId()));
         CourtBooking courtBooking = dayBookings.getDayBookings().get((int) court.getId() - 1);
 
-        boolean registered = courtBooking.addPlayerReservation(newReservation);
+        boolean registered = udpateDbAndCache(newReservation, courtBooking);
 
         if(registered && Status.CONFIRMED.equals(courtBooking.getStatus())) {
             prepareNextCourtBooking(newReservation.getReservationDate(), dayBookings);
-            CourtBooking persistedBooking = courtBookingRepository.save(courtBooking);
-            bookingPublisher.publish(persistedBooking);
+            bookingPublisher.publish(courtBooking);
             return true;
         }
 
+        return registered;
+    }
+
+    private boolean udpateDbAndCache(PlayerReservation newReservation, CourtBooking courtBooking) {
+        if(Objects.isNull(courtBooking.getId())) {
+            CourtBooking persisted = transactionTemplate.execute( st -> courtBookingRepository.save(courtBooking));
+            courtBooking.setId(persisted.getId());
+        }
+
+        CourtBooking toBeUpdated = courtBooking.clone();
+        boolean registered = toBeUpdated.addPlayerReservation(newReservation);
+        if(registered) {
+            CourtBooking persisted = transactionTemplate.execute(st -> entityManager.merge(toBeUpdated));
+            courtBooking.updatePersistedFields(persisted);
+        }
         return registered;
     }
 

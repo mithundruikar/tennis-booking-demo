@@ -6,7 +6,6 @@ import com.example.demo.processor.booking.BookingRegister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.TransactionException;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
 import java.util.concurrent.ExecutorService;
@@ -21,13 +20,10 @@ public class BookingProcessorTask implements Runnable {
     private ExecutorService executorService;
     private volatile boolean stop;
 
-    private TransactionTemplate transactionTemplate;
-
-    public BookingProcessorTask(BookingRequestQueue bookingRequestQueue, BookingRegister bookingRegister, TransactionTemplate transactionTemplate) {
+    public BookingProcessorTask(BookingRequestQueue bookingRequestQueue, BookingRegister bookingRegister) {
         this.bookingRequestQueue = bookingRequestQueue;
         this.bookingRegister = bookingRegister;
         stop = false;
-        this.transactionTemplate = transactionTemplate;
     }
 
     @PostConstruct
@@ -60,13 +56,14 @@ public class BookingProcessorTask implements Runnable {
         }
     }
 
-    private void processRequest(PlayerReservation poll) {
+    private boolean processRequest(PlayerReservation poll) {
         log.info("Processing next reservation request {}", poll);
         try {
-            transactionTemplate.execute(status -> bookingRegister.register(poll));
+            bookingRegister.register(poll);
         } catch (TransactionException te) {
-            log.info("reservation handling trasnaction failed. Need to run recovery for Booking Register", te);
-            throw te;
+            log.info("reservation handling trasnaction failed. Need to run recovery for Booking Register. Failed request {}", poll, te);
+            return false;
         }
+        return true;
     }
 }

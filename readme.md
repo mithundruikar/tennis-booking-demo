@@ -29,6 +29,5 @@ Single threaded task `com.example.demo.processor.task.BookingProcessorTask` pick
 
 
 #Pending work:
-- Database and in-memory booking map can go out of sync if there are some db failures. Transaction boundaries need to be adjusted to make it more robust.
-- Current approach is simple where by if db fails, we can use persisted logs of reservation requests to re-build in-memory booking model which will be in sync with DB. <br>
+- Current approach is simple where by if db or other operation fails, we need to use persisted logs of reservation requests to re-build in-memory booking model which will be in sync with DB. <br>
 But these recovery mechanics are pending to be implemented.

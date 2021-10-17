@@ -41,7 +41,7 @@ public class CourtBookingService {
     @PostMapping(value = "/reservations", consumes = "application/json", produces = "application/json")
     @Transactional
     public ReservationResponse addReservation(
-            @RequestBody @ApiParam(value = "Json Request {\"name\": \"p1\", \"contact\": \"11\", \"courtId\": \"1\", \"reservationDate\": \"2021-10-18\", \"requestType\": \"ADD\"}", example = "{\"name\": \"p1\", \"contact\": \"11\", \"courtId\": \"1\", \"reservationDate\": \"2021-10-18\", \"requestType\": \"ADD\"}")
+            @RequestBody @ApiParam(value = "Json Request {\"name\": \"p1\", \"contact\": \"11\", \"reservationDate\": \"2021-10-18\", \"requestType\": \"ADD\"}", example = "{\"name\": \"p1\", \"contact\": \"11\", \"reservationDate\": \"2021-10-18\", \"requestType\": \"ADD\"}")
             final PlayerReservationRequest playerReservationRequest) {
 
         return bookingRequestQueue.add(playerReservationRequest);

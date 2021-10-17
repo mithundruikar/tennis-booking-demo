@@ -10,8 +10,10 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,13 +35,24 @@ public class BookingRegisterTest {
     private CourtRepository courtRepository;
     @Mock
     private TransactionTemplate transactionTemplate;
+    @Mock
+    private EntityManager entityManager;
 
     private BookingRegister bookingRegister;
 
     @Before
     public void setup() {
-        this.bookingRegister = new BookingRegister(courtBookingRepository, bookingPublisher, courtRepository, 3, 4, transactionTemplate);
-        when(courtBookingRepository.save(any(CourtBooking.class))).thenAnswer(ans -> ans.getArgument(0));
+        this.bookingRegister = new BookingRegister(courtBookingRepository, bookingPublisher, courtRepository, 3, 4, transactionTemplate, entityManager);
+        when(courtBookingRepository.save(any(CourtBooking.class))).thenAnswer(ans -> {
+            CourtBooking argument = ans.getArgument(0, CourtBooking.class);
+            if(argument.getId() == null) {
+                argument.setId(Long.valueOf(1));
+            }
+            return argument;
+        });
+        when(entityManager.merge(any(CourtBooking.class))).thenAnswer(ans -> ans.getArgument(0));
+        when(transactionTemplate.execute(any(TransactionCallback.class))).thenAnswer(ans -> ans.getArgument(0, TransactionCallback.class).doInTransaction(null));
+
     }
 
 
@@ -84,7 +97,7 @@ public class BookingRegisterTest {
         ArgumentCaptor<CourtBooking> courtBookingArgumentCaptor = ArgumentCaptor.forClass(CourtBooking.class);
         verify(bookingPublisher, times(0)).publish(courtBookingArgumentCaptor.capture());
 
-        verify(courtBookingRepository, times(0)).save(any(CourtBooking.class));
+        verify(courtBookingRepository, times(2)).save(any(CourtBooking.class));
     }
 
     @Test

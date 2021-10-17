@@ -54,8 +54,28 @@ public class CourtBooking implements Serializable {
         this.createdTimestamp = LocalDateTime.now(ZoneId.of("UTC"));
     }
 
+    public CourtBooking clone() {
+        CourtBooking courtBooking = new CourtBooking();
+        courtBooking.updatePersistedFields(this);
+        courtBooking.requiredPlayers = this.requiredPlayers;
+        return courtBooking;
+    }
+
+    public void updatePersistedFields(CourtBooking source) {
+        this.id = source.id;
+        this.court = source.court;
+        this.bookingDate = source.bookingDate;
+        this.playerReservations = new HashSet<>(source.playerReservations);
+        this.status = source.status;
+        this.createdTimestamp = LocalDateTime.now(ZoneId.of("UTC"));
+    }
+
     public CourtBooking() {
 
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public synchronized boolean addPlayerReservation(PlayerReservation playerReservation) {

@@ -28,8 +28,6 @@ public class BookingProcessorTaskTest {
     private LinkedBlockingQueue<PlayerReservation> underlyingQueue;
     @Mock
     private BookingRegister bookingRegister;
-    @Mock
-    private TransactionTemplate transactionTemplate;
 
     private BookingProcessorTask bookingProcessorTask;
 
@@ -38,8 +36,7 @@ public class BookingProcessorTaskTest {
     public void setup() {
         this.underlyingQueue = new LinkedBlockingQueue<>(100);
         when(bookingRequestQueue.getQueue()).thenReturn(this.underlyingQueue);
-        bookingProcessorTask = new BookingProcessorTask(bookingRequestQueue, bookingRegister, transactionTemplate);
-        when(transactionTemplate.execute(any(TransactionCallback.class))).thenAnswer(ans -> ans.getArgument(0, TransactionCallback.class).doInTransaction(null));
+        bookingProcessorTask = new BookingProcessorTask(bookingRequestQueue, bookingRegister);
     }
 
 
@@ -51,7 +48,6 @@ public class BookingProcessorTaskTest {
 
         this.bookingProcessorTask.forceRun();
 
-        verify(transactionTemplate, times(1)).execute(any());
         verify(this.bookingRegister, times(1)).register(eq(request));
     }
 }

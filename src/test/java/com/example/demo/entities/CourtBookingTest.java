@@ -27,7 +27,24 @@ public class CourtBookingTest {
         assertEquals(Status.CONFIRMED, courtBooking1.getStatus());
 
         assertFalse(courtBooking1.addPlayerReservation(new PlayerReservation(new Player("p5", "c1"), now, RequestType.ADD)));
+    }
 
+    @Test
+    public void testClone() {
+        LocalDate now = LocalDate.now();
+        CourtBooking courtBooking1 = new CourtBooking(new Court(1l), now, 4);
+        CourtBooking courtBooking2 = courtBooking1.clone();
 
+        assertEquals(courtBooking1, courtBooking2);
+    }
+
+    @Test
+    public void testPersistedFieldUpdate() {
+        LocalDate now = LocalDate.now();
+        CourtBooking courtBooking1 = new CourtBooking(new Court(1l), now, 4);
+        CourtBooking persisted = new CourtBooking(new Court(1l), now, 2);
+        courtBooking1.updatePersistedFields(persisted);
+
+        assertEquals(4, courtBooking1.getRequiredPlayers());
     }
 }

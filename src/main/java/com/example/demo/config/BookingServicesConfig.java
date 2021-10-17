@@ -24,8 +24,8 @@ public class BookingServicesConfig {
     }
 
     @Bean
-    public BookingRegister bookingRegister(CourtBookingRepository courtBookingRepository, BookingPublisher bookingPublisher, CourtRepository courtRepository, TransactionTemplate transactionTemplate) {
-        return new BookingRegister(courtBookingRepository, bookingPublisher, courtRepository, 3, 4, transactionTemplate);
+    public BookingRegister bookingRegister(CourtBookingRepository courtBookingRepository, BookingPublisher bookingPublisher, CourtRepository courtRepository, TransactionTemplate transactionTemplate, EntityManager entityManager) {
+        return new BookingRegister(courtBookingRepository, bookingPublisher, courtRepository, 3, 4, transactionTemplate, entityManager);
     }
 
     @Bean
@@ -39,8 +39,8 @@ public class BookingServicesConfig {
     }
 
     @Bean
-    public BookingProcessorTask bookingProcessorTask(BookingRequestQueue bookingRequestQueue, BookingRegister bookingRegister, TransactionTemplate transactionTemplate) {
-        return new BookingProcessorTask(bookingRequestQueue, bookingRegister, transactionTemplate);
+    public BookingProcessorTask bookingProcessorTask(BookingRequestQueue bookingRequestQueue, BookingRegister bookingRegister) {
+        return new BookingProcessorTask(bookingRequestQueue, bookingRegister);
     }
 
     @Bean
